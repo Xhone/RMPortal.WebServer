@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Cors;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using RMPortal.WebServer.Authorization;
 using RMPortal.WebServer.Data;
 using RMPortal.WebServer.ExtendModels;
 using RMPortal.WebServer.Models;
@@ -15,14 +17,18 @@ namespace RMPortal.WebServer.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    //[Authorize]
     public class UserController : ControllerBase
     {
         private readonly RMPortalContext _context;
-
+        private readonly IJwtUtils _jwtUtils;
         public UserController(RMPortalContext context)
         {
             _context = context;
+          
         }
+    
+       
 
         // GET: api/User
         [EnableCors("ui_policy")]
@@ -46,15 +52,24 @@ namespace RMPortal.WebServer.Controllers
 
             return user;
         }
-
-        public async Task<HttpResponseMessage>GetUserInfo(UserLoginInfo loginInfo)
+        [EnableCors("ui_policy")]
+        //[AllowAnonymous]
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(LoginInfo loginInfo)
         {
-            
+            User user = await _context.Users.SingleOrDefaultAsync(x => x.UserName == loginInfo.Username && x.Password == loginInfo.Password);
+            if (user == null)
+            {
+                return BadRequest(new { message = "Username or password is incorrect" });
+            }
+
+            //var token=_jwtUtils.GenerateJwtToken(user);
+            //AuthenticateResponse response=new AuthenticateResponse(user,token); 
+            return Ok(user);
         }
 
         // PUT: api/User/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [EnableCors("ui_policy")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUser(int id, User user)
         {
@@ -86,7 +101,6 @@ namespace RMPortal.WebServer.Controllers
 
         // POST: api/User
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [EnableCors("ui_policy")]
         [HttpPost]
         public async Task<ActionResult<User>> PostUser(User user)
         {
@@ -97,7 +111,6 @@ namespace RMPortal.WebServer.Controllers
         }
 
         // DELETE: api/User/5
-        [EnableCors("ui_policy")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
@@ -112,12 +125,6 @@ namespace RMPortal.WebServer.Controllers
 
             return NoContent();
         }
-        //[HttpGet("{loginInfo}")]
-        //public async Task<IActionResult> Login(LoginInfo loginInfo)
-        //{
-        //    await _context.Users.FindAsync(loginInfo);
-        //    return NoContent();
-        //}
 
         private bool UserExists(int id)
         {

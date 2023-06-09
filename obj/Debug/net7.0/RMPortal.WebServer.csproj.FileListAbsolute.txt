@@ -275,3 +275,4 @@ D:\sin_repos\RMPortal.WebServer\obj\Debug\net7.0\refint\RMPortal.WebServer.dll
 D:\sin_repos\RMPortal.WebServer\obj\Debug\net7.0\RMPortal.WebServer.pdb
 D:\sin_repos\RMPortal.WebServer\obj\Debug\net7.0\RMPortal.WebServer.genruntimeconfig.cache
 D:\sin_repos\RMPortal.WebServer\obj\Debug\net7.0\ref\RMPortal.WebServer.dll
+D:\sin_repos\RMPortal.WebServer\bin\Debug\net7.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll

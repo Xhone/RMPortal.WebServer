@@ -12,8 +12,8 @@
 [Xx]86/
 [Bb]uild
 bld/
-[Bb]in
-[Oo]bj
+[Bb]in/
+[Oo]bj/
 
 #editor files
 .vscode

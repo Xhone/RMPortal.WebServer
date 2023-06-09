@@ -1,6 +1,10 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using RMPortal.WebServer.Authorization;
+using RMPortal.WebServer.Controllers;
 using RMPortal.WebServer.Data;
+using RMPortal.WebServer.Helpers;
 using System.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,44 +16,15 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("http://localhost:8080");
     });
 });
+
 // Add services to the container.
-
 builder.Services.AddControllers();
-string sgsConn = builder.Configuration.GetConnectionString("SGS");
-SqlConnection conn=null;
-try
-{
-    using (conn= new SqlConnection(sgsConn))
-    {
-        conn.Open();
-        using (SqlCommand cmd = conn.CreateCommand())
-        {
-            cmd.CommandText = "spTxMpoHdLd";
-            cmd.CommandType = System.Data.CommandType.StoredProcedure;
-            SqlParameter[] parameters = new SqlParameter[] 
-            {new SqlParameter("@MpoNo",System.Data.SqlDbType.VarChar,20) };
-            parameters[0].Value = "OF22-00786";
-            cmd.Parameters.AddRange(parameters);
-            SqlDataAdapter adapter = new SqlDataAdapter(cmd);
-            System.Data.DataSet ds = new System.Data.DataSet();
-            adapter.Fill(ds);
-            var dt= ds.Tables[0];
-        }
+
+//configure strongly typed settings object
+builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 
 
-
-        
-        conn.Close();
-    }
-}
-catch(SqlException ex)
-{
-    var mesg = ex.StackTrace;
-}
-finally
-{
-    conn.Close();
-}
+//configure DI for application
 //×¢²áÊý¾Ý¿â
 builder.Services.AddDbContext<RMPortalContext>(options =>
 {
@@ -62,6 +37,10 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+//configure DI for application serice
+builder.Services.AddScoped<IJwtUtils,JwtUtils>();
+
 
 var app = builder.Build();
 
@@ -81,8 +60,12 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
+//configure HTTP request pipeline,global cors policy
+//app.UseCors(x=>x.AllowAnyOrigin().AllowAnyMethod().AllowAnyMethod());
 app.UseCors();
 
 app.MapControllers();
+//custom jwt auth middleware
+//app.UseMiddleware<JwtMiddleware>();
 
 app.Run();
