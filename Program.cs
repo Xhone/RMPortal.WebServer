@@ -8,17 +8,28 @@ using RMPortal.WebServer.Helpers;
 using System.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
+//var allowPolicy = "ui_policy";
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("ui_policy", policy =>
+    options.AddDefaultPolicy(builder =>
     {
-        policy.WithOrigins("http://localhost:8080");
+        builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
     });
+    //options.AddPolicy(name:allowPolicy, policy =>
+    //{
+    //    policy.WithOrigins("http://localhost:8080").
+    //    AllowAnyOrigin().
+    //    AllowAnyHeader().
+    //    AllowAnyMethod();
+
+    //});
 });
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+builder.Services.AddSingleton(new AppSettingsHelper());
 
 //configure strongly typed settings object
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
@@ -28,7 +39,7 @@ builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSet
 //注册数据库
 builder.Services.AddDbContext<RMPortalContext>(options =>
 {
-    string conn = builder.Configuration.GetConnectionString("RMContext");
+    string? conn = builder.Configuration.GetConnectionString("RMContext");
     options.UseSqlServer(conn);
 });
 //添加数据库异常筛选器
@@ -61,9 +72,9 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 //configure HTTP request pipeline,global cors policy
-//app.UseCors(x=>x.AllowAnyOrigin().AllowAnyMethod().AllowAnyMethod());
-app.UseCors();
+app.UseCors(x=>x.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 
+//app.UseCors(allowPolicy);
 app.MapControllers();
 //custom jwt auth middleware
 //app.UseMiddleware<JwtMiddleware>();

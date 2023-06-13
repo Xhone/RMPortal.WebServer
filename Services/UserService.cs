@@ -6,9 +6,9 @@ namespace RMPortal.WebServer.Services
 {
     public interface IUserService
     {
-        AuthenticateResponse Authenticate(LoginInfo loginInfo);
+        AuthenticateResponse? Authenticate(LoginInfo loginInfo);
         IEnumerable<User> GetAll();
-        User GetById(int id);
+        User? GetById(int id);
     }
     public class UserService : IUserService
     {
@@ -38,7 +38,7 @@ namespace RMPortal.WebServer.Services
             return _users;
         }
 
-        public User GetById(int id)
+        public User? GetById(int id)
         {
             return _users.FirstOrDefault(x=>x.Id==id);
         }

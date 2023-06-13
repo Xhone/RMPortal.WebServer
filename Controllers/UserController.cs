@@ -31,7 +31,7 @@ namespace RMPortal.WebServer.Controllers
        
 
         // GET: api/User
-        [EnableCors("ui_policy")]
+        //[EnableCors("ui_policy")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetUser()
         {
@@ -39,8 +39,8 @@ namespace RMPortal.WebServer.Controllers
         }
 
         // GET: api/User/5
-        [EnableCors("ui_policy")]
-        [HttpGet("{id}")]
+        //[EnableCors("ui_policy")]
+        [HttpGet("GetUser")]
         public async Task<ActionResult<User>> GetUser(int id)
         {
             var user = await _context.Users.FindAsync(id);
@@ -52,12 +52,30 @@ namespace RMPortal.WebServer.Controllers
 
             return user;
         }
-        [EnableCors("ui_policy")]
+        //[EnableCors("ui_policy")]
         //[AllowAnonymous]
         [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginInfo loginInfo)
+        
+        public async Task<IActionResult> Login([FromBody]LoginInfo loginInfo)
         {
-            User user = await _context.Users.SingleOrDefaultAsync(x => x.UserName == loginInfo.Username && x.Password == loginInfo.Password);
+            User? user = await _context.Users.SingleOrDefaultAsync(x => x.UserName == loginInfo.Username && x.Password == loginInfo.Password);
+            if (user == null)
+            {
+                return BadRequest(new { message = "Username or password is incorrect" });
+            }
+
+            //var token=_jwtUtils.GenerateJwtToken(user);
+            //AuthenticateResponse response=new AuthenticateResponse(user,token); 
+            return Ok(Response.StatusCode);
+        }
+
+        //[EnableCors("ui_policy")]
+        //[AllowAnonymous]
+        [HttpPost("login2")]
+        
+        public async Task<IActionResult> Login(string username,string password)
+        {
+            User? user = await _context.Users.SingleOrDefaultAsync(x => x.UserName == username && x.Password == password);
             if (user == null)
             {
                 return BadRequest(new { message = "Username or password is incorrect" });
