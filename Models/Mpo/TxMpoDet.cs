@@ -11,16 +11,17 @@
         public string? ColorCode { get; set; }
         public string? Color { get; set; }
         public string? Size { get; set; }
-        public decimal? Qty { get; set; }
-        public decimal? MrQty { get; set;}
-        public decimal? StockQty { get; set;}
-        public decimal? FirstMrQty { get;set;}
+        public decimal Qty { get; set; }
+        public decimal MrQty { get; set;}
+        public decimal StockQty { get; set;}
+        public decimal FirstMrQty { get;set;}
         public string? BuyUnit { get; set; }
-        public decimal? Upx { get;set; }
+        public int? TxMpoHdId { get; set; }=0;
+        public decimal Upx { get;set; }
         public string? PxUnit { get; set; }
-        public decimal? Width { get;set; }
-        public decimal? Weight { get; set; }
-        public TxMpoHd? TxMpoHd { get; set; }
+        public decimal Width { get;set; }
+        public decimal Weight { get; set; }
+        public virtual TxMpoHd? TxMpoHd { get; set; }
 
     }
 }

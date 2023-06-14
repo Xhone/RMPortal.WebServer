@@ -11,8 +11,8 @@ namespace RMPortal.WebServer.Models
 
         public void Test(WebApplicationBuilder builder)
         {
-            string sgsConn = builder.Configuration.GetConnectionString("SGS");
-            SqlConnection conn = null;
+            string? sgsConn = builder.Configuration.GetConnectionString("SGS");
+            SqlConnection? conn = null;
             try
             {
                 using (conn = new SqlConnection(sgsConn))

@@ -4,8 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using RMPortal.WebServer.Data;
+using RMPortal.WebServer.ExtendModels;
 using RMPortal.WebServer.Models.Mpo;
 
 namespace RMPortal.WebServer.Controllers
@@ -34,12 +36,16 @@ namespace RMPortal.WebServer.Controllers
 
         // GET: api/Mpo/GetMpo?id=1
         [HttpGet("GetMpo")]
-        public async Task<ActionResult<TxMpoHd>> GetTxMpoHd(int id)
+        public async Task<ActionResult<TxMpoHd>> GetMpo(int id)
         {
           if (_context.TxMpoHds == null)
           {
               return NotFound();
           }
+         
+          
+            var res = _context.TxMpoHds.FromSqlRaw("GetMpoById @Id", new SqlParameter("Id", id)).ToList();
+            //var txMpoHd = await _context.TxMpoHds.FindAsync(id);
             var txMpoHd = await _context.TxMpoHds.Include(det=>det.TxMpoDets).AsNoTracking().FirstOrDefaultAsync(hd=>hd.Id==id);
 
             var result = from hd in _context.TxMpoHds
@@ -48,6 +54,7 @@ namespace RMPortal.WebServer.Controllers
                          from hd_detl in hd_det.DefaultIfEmpty()
                          select new TxMpoHd
                          {
+
                              Id = hd.Id,
                              MpoNo = hd.MpoNo,
                              Revision = hd.Revision,
@@ -70,10 +77,10 @@ namespace RMPortal.WebServer.Controllers
                              UDDate1 = hd.UDDate1,
                              UDField3 = hd.UDField3,
                              AllowPurchase = hd.AllowPurchase,
-                             TxMpoDets = hd_det.ToList()
+                             TxMpoDets = hd_det.ToList(),
                          };
 
-            return await result.FirstOrDefaultAsync();
+            //return await result.FirstOrDefaultAsync();
             if (txMpoHd == null)
             {
                 return NotFound();

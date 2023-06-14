@@ -25,11 +25,12 @@ namespace RMPortal.WebServer.Data
             modelBuilder.Entity<Role>().ToTable("Roles");
             modelBuilder.Entity<TxMpoHd>().ToTable("TxMpoHd");
             modelBuilder.Entity<TxMpoDet>().ToTable("TxMpoDet");
-            
-        }
-    
 
-       
+            //modelBuilder.Entity<TxMpoDet>().Property("TxMpoHdId").HasColumnName("Id");
+
+          
+            
+        }  
        
 
     }
