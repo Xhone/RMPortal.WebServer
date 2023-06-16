@@ -21,6 +21,7 @@ namespace RMPortal.WebServer.Models.Mpo
         }
         public string? DeliAdd { get; set; }
         public DateTime? ShipDate { get; set; }
+        public string? ShipMode { get; set; }
         public string? Lighting { get; set; }
         public string? Ccy { get; set; }
         public string? Attn { get; set; }

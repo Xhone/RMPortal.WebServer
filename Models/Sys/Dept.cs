@@ -1,13 +1,13 @@
 ﻿using Microsoft.Data.SqlClient;
 
-namespace RMPortal.WebServer.Models
+namespace RMPortal.WebServer.Models.Sys
 {
-    public class Dept
+    public class Dept:CommonProp
     {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public string CreateBy { get; set; }
-        public DateTime? CreateDate { get; set; }
+        
+        public string? Name { get; set; }
+        public int ParentId { get; set; }
+      
 
         public void Test(WebApplicationBuilder builder)
         {

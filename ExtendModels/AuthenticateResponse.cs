@@ -1,4 +1,4 @@
-﻿using RMPortal.WebServer.Models;
+﻿using RMPortal.WebServer.Models.Sys;
 
 namespace RMPortal.WebServer.ExtendModels
 {

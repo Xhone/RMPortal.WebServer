@@ -6,8 +6,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using RMPortal.WebServer.Data;
 using RMPortal.WebServer.ExtendModels;
+using RMPortal.WebServer.Helpers;
 using RMPortal.WebServer.Models.Mpo;
 
 namespace RMPortal.WebServer.Controllers
@@ -18,22 +20,57 @@ namespace RMPortal.WebServer.Controllers
     {
         private readonly RMPortalContext _context;
 
-        public MpoController(RMPortalContext context)
+        private readonly Secrets _secrets;
+
+        public MpoController(RMPortalContext context,IOptions<Secrets> options)
         {
             _context = context;
+            _secrets = options.Value;
         }
 
         // GET: api/Mpo
         [HttpGet]
         public async Task<ActionResult<IEnumerable<TxMpoHd>>> GetTxMpoHds()
         {
+          
           if (_context.TxMpoHds == null)
           {
               return NotFound();
           }
             return await _context.TxMpoHds.ToListAsync();
         }
+        [HttpGet("GetMpoHd")]
+        public async Task<ActionResult<IEnumerable<MpoHd>>> GetMpoHd(string? mpo,DateTime start,DateTime end)
+        {
+            
+            bool s = string.IsNullOrWhiteSpace(mpo);
 
+            var result = from hd in _context.TxMpoHds
+                         where s?true:hd.MpoNo.Contains(mpo)
+                         where hd.MpoDate >= start && hd.MpoDate <= end
+                         select new MpoHd
+                         {
+                             Id = hd.Id,
+                             MpoNo = hd.MpoNo,
+                             MpoDate=hd.MpoDate,
+                             MpoType=hd.DeliAdd,
+                             Attn=hd.Attn,
+                             Heading=hd.Heading,
+                             ShipMode=hd.ShipMode,
+                             Shipment=hd.ShipDate,
+                             Supplier=hd.SuppCode
+
+                         };
+            if (result == null)
+            {
+                return NotFound();
+            }
+            return await result.ToListAsync();
+            
+
+            
+
+        }
         // GET: api/Mpo/GetMpo?id=1
         [HttpGet("GetMpo")]
         public async Task<ActionResult<TxMpoHd>> GetMpo(int id)

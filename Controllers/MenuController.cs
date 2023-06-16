@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RMPortal.WebServer.Data;
-using RMPortal.WebServer.Models;
+using RMPortal.WebServer.Models.Sys;
 
 namespace RMPortal.WebServer.Controllers
 {

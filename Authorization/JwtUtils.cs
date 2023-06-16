@@ -2,6 +2,7 @@
 using Microsoft.IdentityModel.Tokens;
 using RMPortal.WebServer.Helpers;
 using RMPortal.WebServer.Models;
+using RMPortal.WebServer.Models.Sys;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;

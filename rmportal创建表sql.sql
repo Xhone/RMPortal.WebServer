@@ -123,6 +123,7 @@ constraint PK_MpoDet primary key clustered(
 	)with (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
-ALTER TABLE dbo.TxMpoDet ADD TxMpoHdId default 0 
+ALTER TABLE Test.dbo.TxMpoHd add ShipMode nvarchar(20) default ''
+ALTER TABLE dbo.TxMpoDet ADD TxMpoHdId int default 0 
 ADD CONSTRAINT FK_MpoNo
 FOREIGN KEY (MpoNo) REFERENCES TxMpoHd(MpoNo)

@@ -34,6 +34,7 @@ builder.Services.AddSingleton(new AppSettingsHelper());
 //configure strongly typed settings object
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 
+builder.Services.Configure<Secrets>(builder.Configuration.GetSection("Secrets"));
 
 //configure DI for application
 //×¢²áÊý¾Ý¿â

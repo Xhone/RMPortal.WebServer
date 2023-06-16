@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using RMPortal.WebServer.Models;
+using RMPortal.WebServer.Models.Sys;
 
 namespace RMPortal.WebServer.Authorization
 {
