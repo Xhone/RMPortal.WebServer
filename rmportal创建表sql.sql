@@ -68,6 +68,7 @@ CREATE TABLE [dbo].[Depts](
 CREATE TABLE [dbo].TxMpoHd(
 	Id int identity(1,1) not null,
 	MpoNo nvarchar(20) not null,
+	MpoType nvarchar(30),
 	Revision nvarchar(3),
 	MpoDate datetime,
 	Heading nvarchar(12),
