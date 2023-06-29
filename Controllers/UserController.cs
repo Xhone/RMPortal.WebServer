@@ -160,7 +160,7 @@ namespace RMPortal.WebServer.Controllers
             user.Password = user.Password.EncryptDES(_secrets.User);
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
-
+            
             return Ok(200);
             //return CreatedAtAction("GetUser", new { id = user.Id }, user);
         }
