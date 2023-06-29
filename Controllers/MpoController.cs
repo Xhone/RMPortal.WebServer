@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using RMPortal.WebServer.Businesses;
 using RMPortal.WebServer.Data;
 using RMPortal.WebServer.ExtendModels;
 using RMPortal.WebServer.Helpers;
@@ -37,16 +38,16 @@ namespace RMPortal.WebServer.Controllers
           {
               return NotFound();
           }
-            return await _context.TxMpoHds.ToListAsync();
+          var result= await _context.TxMpoHds.ToListAsync();
+            
+          return Ok(result);
         }
         [HttpGet("GetMpoHd")]
         public async Task<ActionResult<IEnumerable<MpoHd>>> GetMpoHd(string? mpo,DateTime start,DateTime end)
         {
-            
-            bool s = string.IsNullOrWhiteSpace(mpo);
-
+           
             var result = from hd in _context.TxMpoHds
-                         where s?true:hd.MpoNo.Contains(mpo)
+                         where string.IsNullOrWhiteSpace(mpo) ? true:hd.MpoNo.Contains(mpo)
                          where hd.MpoDate >= start && hd.MpoDate <= end
                          select new MpoHd
                          {
@@ -79,51 +80,63 @@ namespace RMPortal.WebServer.Controllers
           {
               return NotFound();
           }
-         
           
-            var res = _context.TxMpoHds.FromSqlRaw("GetMpoById @Id", new SqlParameter("Id", id)).ToList();
-            //var txMpoHd = await _context.TxMpoHds.FindAsync(id);
+           
             var txMpoHd = await _context.TxMpoHds.Include(det=>det.TxMpoDets).AsNoTracking().FirstOrDefaultAsync(hd=>hd.Id==id);
 
-            var result = from hd in _context.TxMpoHds
-                         join det in _context.TxMpoDets on hd.MpoNo equals det.MpoNo into hd_det
-                         where hd.Id.Equals(id)
-                         from hd_detl in hd_det.DefaultIfEmpty()
-                         select new TxMpoHd
-                         {
+            #region linq
+            //var result = from hd in _context.TxMpoHds
+            //             join det in _context.TxMpoDets on hd.MpoNo equals det.MpoNo into hd_det
+            //             where hd.Id.Equals(id)
+            //             from hd_detl in hd_det.DefaultIfEmpty()
+            //             select new TxMpoHd
+            //             {
 
-                             Id = hd.Id,
-                             MpoNo = hd.MpoNo,
-                             Revision = hd.Revision,
-                             MpoDate = hd.MpoDate,
-                             Heading = hd.Heading,
-                             SuppCode = hd.SuppCode,
-                             Terms = hd.Terms,
-                             DeliAdd = hd.DeliAdd,
-                             ShipDate = hd.ShipDate,
-                             Lighting = hd.Lighting,
-                             Ccy = hd.Ccy,
-                             Attn = hd.Attn,
-                             Remark = hd.Remark,
-                             Status = hd.Status,
-                             Payment = hd.Payment,
-                             SubconFlag = hd.SubconFlag,
-                             SubconType = hd.SubconType,
-                             JobNoStr = hd.JobNoStr,
-                             InCharge = hd.InCharge,
-                             UDDate1 = hd.UDDate1,
-                             UDField3 = hd.UDField3,
-                             AllowPurchase = hd.AllowPurchase,
-                             TxMpoDets = hd_det.ToList(),
-                         };
+            //                 Id = hd.Id,
+            //                 MpoNo = hd.MpoNo,
+            //                 Revision = hd.Revision,
+            //                 MpoDate = hd.MpoDate,
+            //                 Heading = hd.Heading,
+            //                 SuppCode = hd.SuppCode,
+            //                 Terms = hd.Terms,
+            //                 DeliAdd = hd.DeliAdd,
+            //                 ShipDate = hd.ShipDate,
+            //                 Lighting = hd.Lighting,
+            //                 Ccy = hd.Ccy,
+            //                 Attn = hd.Attn,
+            //                 Remark = hd.Remark,
+            //                 Status = hd.Status,
+            //                 Payment = hd.Payment,
+            //                 SubconFlag = hd.SubconFlag,
+            //                 SubconType = hd.SubconType,
+            //                 JobNoStr = hd.JobNoStr,
+            //                 InCharge = hd.InCharge,
+            //                 UDDate1 = hd.UDDate1,
+            //                 UDField3 = hd.UDField3,
+            //                 AllowPurchase = hd.AllowPurchase,
+            //                 TxMpoDets = hd_det.ToList(),
+            //             };
 
             //return await result.FirstOrDefaultAsync();
+            #endregion
+
             if (txMpoHd == null)
             {
                 return NotFound();
             }
 
             return txMpoHd;
+        }
+        [HttpGet("GetmpoView")]
+        public async Task<ActionResult<IEnumerable<GenPOData>>> GetMpoView(string jobNo)
+        {
+            var result = await Task.Run(() => { return GenMpoBiz.GetPoData(jobNo); }); //GetMpoView(jobNo);
+            if (result == null)
+            {
+                return NotFound();
+            }
+            return result;
+           
         }
 
         // PUT: api/Mpo/5
@@ -159,15 +172,23 @@ namespace RMPortal.WebServer.Controllers
 
         // POST: api/Mpo
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<TxMpoHd>> PostTxMpoHd(TxMpoHd txMpoHd)
+        [HttpPost("Save")]
+        public async Task<ActionResult<TxMpoHd>> PostTxMpoHd([FromBody]TxMpoHd txMpoHd)
         {
           if (_context.TxMpoHds == null)
           {
               return Problem("Entity set 'RMPortalContext.TxMpoHds'  is null.");
           }
             _context.TxMpoHds.Add(txMpoHd);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+
+            }
+            
 
             return CreatedAtAction("GetTxMpoHd", new { id = txMpoHd.Id }, txMpoHd);
         }

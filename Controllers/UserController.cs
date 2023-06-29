@@ -57,6 +57,25 @@ namespace RMPortal.WebServer.Controllers
 
             return user;
         }
+
+        [HttpGet("GetUserByName")]
+        public async Task<ActionResult<IEnumerable<User>>> GetUserByName(string? userName)
+        {
+            if (string.IsNullOrEmpty(userName))
+            {
+                
+                return await _context.Users.ToListAsync();
+            }
+            var user = await _context.Users.FirstOrDefaultAsync(x=>x.UserName.Equals(userName));
+
+            if (user == null)
+            {
+                return new List<User>();
+            }
+            List<User> users = new List<User>();
+            users.Add(user);
+            return Ok(users);
+        }
         //[EnableCors("ui_policy")]
         //[AllowAnonymous]
         [HttpPost("login")]
@@ -134,15 +153,16 @@ namespace RMPortal.WebServer.Controllers
 
         // POST: api/User
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<User>> PostUser(User user)
+        [HttpPost("Save")]
+        public async Task<ActionResult> PostUser([FromBody] User user)
         {
-            string ps = user.Password;
-            user.Password=user.Password.EncryptDES(_secrets.User);
+            //string ps = user.Password;
+            user.Password = user.Password.EncryptDES(_secrets.User);
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetUser", new { id = user.Id }, user);
+            return Ok(200);
+            //return CreatedAtAction("GetUser", new { id = user.Id }, user);
         }
 
         // DELETE: api/User/5
