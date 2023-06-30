@@ -8,22 +8,21 @@ using RMPortal.WebServer.Helpers;
 using System.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
-//var allowPolicy = "ui_policy";
+var allowPolicy = "ui_policy";
 
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(builder =>
-    {
-        builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
-    });
-    //options.AddPolicy(name:allowPolicy, policy =>
+    //options.AddDefaultPolicy(builder =>
     //{
-    //    policy.WithOrigins("http://localhost:8080").
-    //    AllowAnyOrigin().
-    //    AllowAnyHeader().
-    //    AllowAnyMethod();
-
+    //    builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
     //});
+    options.AddPolicy(name: allowPolicy, policy =>
+    {
+        policy.WithOrigins("http://localhost:8080").
+        AllowAnyHeader().
+        AllowAnyMethod();
+
+    });
 });
 
 // Add services to the container.
@@ -70,12 +69,15 @@ else
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
+
 
 //configure HTTP request pipeline,global cors policy
-app.UseCors(x=>x.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+//app.UseCors(x=>x.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 
-//app.UseCors(allowPolicy);
+app.UseCors(allowPolicy);
+
+app.UseAuthorization();
+
 app.MapControllers();
 //custom jwt auth middleware
 //app.UseMiddleware<JwtMiddleware>();
