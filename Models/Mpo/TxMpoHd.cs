@@ -44,7 +44,7 @@ namespace RMPortal.WebServer.Models.Mpo
         //付款方法
         public string? Payment { get; set; }
         //Bulk Purchase
-        public char SubconFlag { get; set; }
+        public bool SubconFlag { get; set; }
         //Request By
         public string? SubconType { get; set; }
         //生产单号
@@ -52,11 +52,12 @@ namespace RMPortal.WebServer.Models.Mpo
         //创建人
         public string? InCharge { get; set; }
         //Revised Date
-        public DateTime? UDDate1 { get; set; }
+        public DateTime? RevisedDate { get; set; }
         //送货至which factory
-        public string? UDField3 { get; set; }
+        public string? ShippedTo { get; set; }
         //允许超收货
         public decimal AllowPurchase { get; set; }
         public ICollection<TxMpoDet>? TxMpoDets { get; set; }=new List<TxMpoDet>();
+        public ICollection<TxMpoSurcharge>? TxMpoSurcharges { get; set; } =new List<TxMpoSurcharge>();
     }
 }

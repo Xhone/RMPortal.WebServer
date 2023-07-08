@@ -82,12 +82,12 @@ namespace RMPortal.WebServer.Controllers
           {
               return NotFound();
           }
-          
-           
-            var txMpoHd = await _context.TxMpoHds.Include(det=>det.TxMpoDets).AsNoTracking().FirstOrDefaultAsync(hd=>hd.Id==id);
+
+            
+            var result = await _context.TxMpoHds.Include(det=>det.TxMpoDets).AsNoTracking().FirstOrDefaultAsync(hd=>hd.Id==id);
 
             #region linq
-            //var result = from hd in _context.TxMpoHds
+            //result = await (from hd in _context.TxMpoHds
             //             join det in _context.TxMpoDets on hd.MpoNo equals det.MpoNo into hd_det
             //             where hd.Id.Equals(id)
             //             from hd_detl in hd_det.DefaultIfEmpty()
@@ -113,31 +113,45 @@ namespace RMPortal.WebServer.Controllers
             //                 SubconType = hd.SubconType,
             //                 JobNoStr = hd.JobNoStr,
             //                 InCharge = hd.InCharge,
-            //                 UDDate1 = hd.UDDate1,
-            //                 UDField3 = hd.UDField3,
+            //                 RevisedDate = hd.RevisedDate,
+            //                 ShippedTo = hd.ShippedTo,
             //                 AllowPurchase = hd.AllowPurchase,
             //                 TxMpoDets = hd_det.ToList(),
-            //             };
+            //             }).FirstOrDefaultAsync();
 
-            //return await result.FirstOrDefaultAsync();
             #endregion
-
-            if (txMpoHd == null)
-            {
-                return NotFound();
-            }
-
-            return txMpoHd;
-        }
-        [HttpGet("GetmpoView")]
-        public async Task<ActionResult<IEnumerable<GenPOData>>> GetMpoView(string jobNo)
-        {
-            var result = await Task.Run(() => { return GenMpoBiz.GetPoData(jobNo); }); //GetMpoView(jobNo);
             if (result == null)
             {
                 return NotFound();
             }
-            return result;
+            return Ok(result);
+
+
+
+        }
+        [HttpGet("GetmpoView")]
+        public async Task<ActionResult<IEnumerable<GenPOData>>> GetMpoView(string jobNo)
+        {
+            List<GenPOData>? r = new List<GenPOData>();
+            if (jobNo.Contains(','))
+            {
+                var jobNos = jobNo.Split(',');
+                r=await Task.Run(() => { return GenMpoBiz.GetPoData(jobNos); });
+                if(r==null)
+                    return NotFound();
+               
+            }
+            else
+            {
+                r = await Task.Run(() => { return GenMpoBiz.GetPoData(jobNo); });
+                if (r == null)
+                {
+                    return NotFound();
+                }
+                
+            }
+           
+            return Ok(r);
            
         }
 
@@ -175,7 +189,7 @@ namespace RMPortal.WebServer.Controllers
         // POST: api/Mpo
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost("Save")]
-        public async Task<ActionResult<TxMpoHd>> PostTxMpoHd([FromBody]TxMpoHd txMpoHd)
+        public async Task<ActionResult> PostTxMpoHd([FromBody]TxMpoHd txMpoHd)
         {
           if (_context.TxMpoHds == null)
           {
@@ -190,9 +204,9 @@ namespace RMPortal.WebServer.Controllers
             {
 
             }
-            
 
-            return CreatedAtAction("GetTxMpoHd", new { id = txMpoHd.Id }, txMpoHd);
+            return Ok(Response.StatusCode);
+            //return CreatedAtAction("GetTxMpoHd", new { id = txMpoHd.Id }, txMpoHd);
         }
 
         // DELETE: api/Mpo/5

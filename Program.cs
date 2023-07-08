@@ -6,6 +6,7 @@ using RMPortal.WebServer.Controllers;
 using RMPortal.WebServer.Data;
 using RMPortal.WebServer.Helpers;
 using System.Configuration;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 var allowPolicy = "ui_policy";
@@ -26,7 +27,8 @@ builder.Services.AddCors(options =>
 });
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(
+    x=>x.JsonSerializerOptions.ReferenceHandler=ReferenceHandler.IgnoreCycles);
 
 builder.Services.AddSingleton(new AppSettingsHelper());
 

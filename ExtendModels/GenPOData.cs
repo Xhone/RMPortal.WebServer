@@ -49,6 +49,20 @@
 
     }
 
+    public class PoData
+    {
+        public string? MatCode { get; set; }
+        public string? TempMat { get; set; }
+        public string? ColorCode { get; set; }
+        public string? Color { get; set; }
+        public string? Sizes { get; set; }
+        public decimal? MrReqQty_B { get; set; }
+        public string? BuyUnit { get; set; }
+        public decimal? UPx { get; set; }
+        public string? PxUnit { get; set; }
+        public decimal? Width1 { get; set; }
+        public decimal? Weight { get; set; }
+    }
     public class MpoView
     {
         public string? JobNo { get; set; }

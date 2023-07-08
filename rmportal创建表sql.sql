@@ -1,4 +1,4 @@
-USE Test
+USE RMPortal
 CREATE TABLE [dbo].[Users](
 	[Id] [int] IDENTITY(1,1) NOT NULL,	
 	[UserName] [nvarchar](100) NOT NULL,
@@ -76,6 +76,7 @@ CREATE TABLE [dbo].TxMpoHd(
 	Terms nvarchar(60),
 	DeliAdd nvarchar(255),
 	ShipDate datetime,
+	ShipMode nvarchar(20) default ''
 	Lighting nvarchar(20),
 	Ccy nvarchar(3),
 	Attn nvarchar(25),
@@ -86,8 +87,8 @@ CREATE TABLE [dbo].TxMpoHd(
 	SubconType nvarchar(20),
 	JobNoStr nvarchar(255),
 	InCharge nvarchar(20),
-	UDDate1 datetime,
-	UDField3 nvarchar(50),
+	RevisetedDate datetime,
+	ShippedTo nvarchar(50),
 	AllowPurchase decimal(7,4)
 	constraint PK_MpoHd primary key clustered(
 	MpoNo asc
@@ -100,9 +101,10 @@ insert into TxMpoDet values(1,'SSSS',1,'','','','','',1,1,1,1,'',1,'',1,1)
 insert into TxMpoDet(MpoNo,MpoDetId)values('SSSS',1)
 insert into TxMpoDet(MpoNo,MpoDetId)values('ffff',2)
 drop table TxMpoDet
+
+--TxMpoDet
 CREATE TABLE dbo.TxMpoDet(
-Id int identity(1,1),
-MpoDetId int,
+MpoDetId int ,
 MpoNo nvarchar(20),
 Seq int,
 MatCode nvarchar(40),
@@ -124,7 +126,99 @@ constraint PK_MpoDet primary key clustered(
 	)with (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
-ALTER TABLE Test.dbo.TxMpoHd add ShipMode nvarchar(20) default ''
+ALTER TABLE dbo.TxMpoDet DROP COLUMN TxMpoHdId
+
 ALTER TABLE dbo.TxMpoDet ADD TxMpoHdId int default 0 
-ADD CONSTRAINT FK_MpoNo
+
+ALTER TABLE dbo.TxMpoDet ADD CONSTRAINT FK_MpoNo
 FOREIGN KEY (MpoNo) REFERENCES TxMpoHd(MpoNo)
+
+--TxMpoMatDet
+CREATE TABLE TxMpoMatDet(
+MpoMatDetId int identity(1,1),
+MpoNo nvarchar(20),
+MatCode nvarchar(40),
+Remark text,
+BuyUnit nvarchar(8),
+BuyUnitFactor decimal(10,4),
+MatDesc nvarchar(255),
+PriceUnit nvarchar(8),
+PriceUnitFactor decimal(10,4),
+TempMat nvarchar(150),
+Width decimal(7,3),
+Weight decimal(7,3),
+Origin nvarchar(20),
+ArticleNo nvarchar(20),
+Vendor nvarchar(20),
+constraint PK_MpoMatDet primary key clustered(
+	MpoMatDetId,MpoNo asc
+	)with (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+ALTER TABLE TxMpoMatDet ADD CONSTRAINT FK_MpoNo
+FOREIGN KEY (MpoNo) REFERENCES TxMpoDet(MpoNo)
+
+--TxMpoSurcharge
+CREATE TABLE TxMpoSurcharge(
+MpoSurId INT IDENTITY(1,1),
+MpoNo NVARCHAR(20),
+SurType NVARCHAR(10),
+SurDescription NVARCHAR(40),
+SurPercent DECIMAL(5,2),
+SurAmount DECIMAL(15,2)
+ CONSTRAINT [PK_MpoSurcharge] PRIMARY KEY CLUSTERED 
+(
+	MpoSurId,MpoNo ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+ALTER TABLE TxMpoSurcharge ADD CONSTRAINT FK_MpoSurcharge
+FOREIGN KEY (MpoNo) REFERENCES TxMpoHd(MpoNo)
+
+
+GO
+
+CREATE TABLE [dbo].[TxMpoDet](
+	[MpoNo] nvarchar(20) NOT NULL,
+	[MpoDetId] int NOT NULL,
+	[Seq] int NULL,
+	[MatCode] [nvarchar](40) NULL,
+	[TempMat] [nvarchar](150) NULL,
+	[ColorCode] [nvarchar](20) NULL,
+	[Color] [nvarchar](150) NULL,
+	[Size] [nvarchar](20) NULL,
+	[Qty] [decimal](14, 3) NULL,
+	[MrQty] [decimal](14, 3) NULL,
+	[StockQty] [decimal](14, 3) NULL,
+	[FirstMrQty] [decimal](14, 3) NULL,
+	[UPx] [decimal](12, 4) NULL,
+	[PxUnit] [nvarchar(10)],
+	[Width] decimal(7,4),
+	[Weight] decimal(7,4)
+	
+ CONSTRAINT [PkTxMpoDet] PRIMARY KEY NONCLUSTERED 
+(
+	[MpoNo] ASC,
+	[MpoDetId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, FILLFACTOR = 80) ON [PRIMARY],
+ CONSTRAINT [IxTxMpoDet_MatKey] UNIQUE NONCLUSTERED 
+(
+	[MpoNo] ASC,
+	[MatCode] ASC,
+	[TempMat] ASC,
+	[Color] ASC,	
+	[ColorCode] ASC,
+	[Size] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, FILLFACTOR = 80) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+
+
+
+ALTER TABLE [dbo].[TxMpoDet]  WITH CHECK ADD  CONSTRAINT [FkTxMpoDet_Hd] FOREIGN KEY([MpoNo])
+REFERENCES [dbo].[TxMpoHd] ([MpoNo])
+GO
+
+ALTER TABLE [dbo].[TxMpoDet] CHECK CONSTRAINT [FkTxMpoDet_Hd]
+GO

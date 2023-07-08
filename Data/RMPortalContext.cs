@@ -24,7 +24,21 @@ namespace RMPortal.WebServer.Data
             modelBuilder.Entity<Menu>().ToTable("Menus");
             modelBuilder.Entity<Role>().ToTable("Roles");
             modelBuilder.Entity<TxMpoHd>().ToTable("TxMpoHd");
-            modelBuilder.Entity<TxMpoDet>().ToTable("TxMpoDet");
+
+            modelBuilder.Entity<TxMpoDet>().ToTable("TxMpoDet")
+                .HasOne(d => d.TxMpoHd)
+                .WithMany(h => h.TxMpoDets)
+                .HasForeignKey(d => d.MpoNo)
+                .HasPrincipalKey(h => h.MpoNo);
+
+            modelBuilder.Entity<TxMpoSurcharge>().ToTable("TxMpoSurcharge")
+                .HasOne(s => s.TxMpoHd)
+                .WithMany(h => h.TxMpoSurcharges)
+                .HasForeignKey(s => s.MpoNo)
+                .HasPrincipalKey(h => h.MpoNo);
+               
+          
+                                
 
             //modelBuilder.Entity<TxMpoDet>().Property("TxMpoHdId").HasColumnName("Id");
 

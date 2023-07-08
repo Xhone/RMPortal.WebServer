@@ -26,6 +26,8 @@ namespace RMPortal.WebServer.Controllers
         private readonly RMPortalContext _context;
      
         private readonly Secrets _secrets;
+
+        public static int ID;
         public UserController(RMPortalContext context,IOptions<Secrets> options)
         {
             _context = context;
@@ -86,6 +88,7 @@ namespace RMPortal.WebServer.Controllers
             if(string.IsNullOrWhiteSpace(loginInfo.Password)) {
                 return BadRequest(new JsonResult("password is empty."));
             }
+            
             loginInfo.Password = loginInfo.Password.EncryptDES(_secrets.User);
             User? user = await _context.Users.SingleOrDefaultAsync(x => x.UserName == loginInfo.Username && x.Password == loginInfo.Password);
             if (user == null)
@@ -93,7 +96,7 @@ namespace RMPortal.WebServer.Controllers
                 
                 return BadRequest(new JsonResult(new { message = "Username or password is incorrect" }));
             }
-
+            ID = Businesses.DTradeBiz.GetDtradeUser(user.NTID.ToUpper());
             //var token=_jwtUtils.GenerateJwtToken(user);
             //AuthenticateResponse response=new AuthenticateResponse(user,token); 
             loginInfo.Password = string.Empty;
