@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Cors;
@@ -44,24 +45,35 @@ namespace RMPortal.WebServer.Controllers
             
           return Ok(result);
         }
+
+
         [HttpGet("GetMpoHd")]
-        public async Task<ActionResult<IEnumerable<MpoHd>>> GetMpoHd(string? mpo,DateTime start,DateTime end)
+        public async Task<ActionResult<IEnumerable<MpoHd>>> GetMpoHd(string? mpo,DateTime? start,DateTime? end)
         {
-           
+
             var result = from hd in _context.TxMpoHds
-                         where string.IsNullOrWhiteSpace(mpo) ? true:hd.MpoNo.Contains(mpo)
-                         where hd.MpoDate >= start && hd.MpoDate <= end
+                         where string.IsNullOrWhiteSpace(mpo) ? true : hd.MpoNo.Contains(mpo)
+                         where start.HasValue ? hd.MpoDate >= start : true
+                         where end.HasValue ? hd.MpoDate <= end : true
+                         orderby hd.MpoDate descending, hd.Heading
                          select new MpoHd
                          {
                              Id = hd.Id,
                              MpoNo = hd.MpoNo,
-                             MpoDate=hd.MpoDate,
-                             MpoType=hd.DeliAdd,
-                             Attn=hd.Attn,
-                             Heading=hd.Heading,
-                             ShipMode=hd.ShipMode,
-                             Shipment=hd.ShipDate,
-                             Supplier=hd.SuppCode
+                             MpoDate = hd.MpoDate,
+                             MpoType = hd.MpoType,
+                             Attn = hd.Attn,
+                             Heading = hd.Heading,
+                             ShipMode = hd.ShipMode,
+                             ShipDate = hd.ShipDate,
+                             Status = GenMpoBiz.GetStatus(hd.Status),
+                             Supplier = hd.SuppCode,
+                             JobNo = hd.JobNoStr,
+                             Ccy = hd.Ccy,
+                             Terms = hd.Terms,
+                             Payment = hd.Payment,
+                             ShippedTo = hd.ShippedTo,
+
 
                          };
             if (result == null)
@@ -84,7 +96,14 @@ namespace RMPortal.WebServer.Controllers
           }
 
             
-            var result = await _context.TxMpoHds.Include(det=>det.TxMpoDets).AsNoTracking().FirstOrDefaultAsync(hd=>hd.Id==id);
+            var result = await _context.TxMpoHds
+                .Include(det=>det.TxMpoDets)
+                .ThenInclude(mr=>mr.TxMpoDetMrs)
+                .Include(matDet=>matDet.TxMpoMatDets)
+                
+                .Include(sur=>sur.TxMpoSurcharges)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(hd=>hd.Id==id);
 
             #region linq
             //result = await (from hd in _context.TxMpoHds
@@ -186,11 +205,41 @@ namespace RMPortal.WebServer.Controllers
             return NoContent();
         }
 
+        [HttpPut("PutMpo")]
+        public async Task<IActionResult> PutTxMpoHd([FromBody]TxMpoHd txMpoHd)
+        {
+            if (0== txMpoHd.Id)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(txMpoHd).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!TxMpoHdExists(txMpoHd.Id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return Ok(Response.StatusCode);
+        }
+
         // POST: api/Mpo
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost("Save")]
         public async Task<ActionResult> PostTxMpoHd([FromBody]TxMpoHd txMpoHd)
         {
+          
           if (_context.TxMpoHds == null)
           {
               return Problem("Entity set 'RMPortalContext.TxMpoHds'  is null.");
@@ -210,23 +259,28 @@ namespace RMPortal.WebServer.Controllers
         }
 
         // DELETE: api/Mpo/5
-        [HttpDelete("{id}")]
+        [HttpDelete("DeleteById")]
         public async Task<IActionResult> DeleteTxMpoHd(int id)
         {
             if (_context.TxMpoHds == null)
             {
                 return NotFound();
             }
-            var txMpoHd = await _context.TxMpoHds.FindAsync(id);
+            var txMpoHd = await _context.TxMpoHds
+                .Include(det=>det.TxMpoDets)
+                .ThenInclude(mr=>mr.TxMpoDetMrs)
+                .Include(mat=>mat.TxMpoMatDets)
+                .Include(sur=>sur.TxMpoSurcharges)
+                .FirstAsync(hd=>hd.Id==id);
             if (txMpoHd == null)
             {
                 return NotFound();
             }
-
+            
             _context.TxMpoHds.Remove(txMpoHd);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(Response.StatusCode);
         }
 
         private bool TxMpoHdExists(int id)

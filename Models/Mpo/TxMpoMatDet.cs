@@ -18,7 +18,7 @@ namespace RMPortal.WebServer.Models.Mpo
         public decimal? Width { get; set; }
         public decimal? Weight { get; set; } = 0;
         public string? Origin { get; set; }
-        public string? ArticleNo { get; set; }
-        public string? Vendor { get; set; }
+        public decimal? MpoAmount { get; set; }
+        public TxMpoHd? TxMpoHd { get; set; }
     }
 }

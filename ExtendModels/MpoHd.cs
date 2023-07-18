@@ -16,9 +16,15 @@
         //货运方式
         public string? ShipMode { get; set; }
         //货运时间
-        public DateTime? Shipment { get; set; }
+        public DateTime? ShipDate { get; set; }
+        public string? Status { get; set; }
         //供应商
         public string? Supplier { get; set;}
+        public string? JobNo { get; set; }
+        public string? Ccy { get; set; }
+        public string? Terms { get; set; }
+        public string? Payment { get; set; }
+        public string? ShippedTo { get; set; }
 
     }
 }

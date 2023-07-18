@@ -28,7 +28,14 @@ builder.Services.AddCors(options =>
 
 // Add services to the container.
 builder.Services.AddControllers().AddJsonOptions(
-    x=>x.JsonSerializerOptions.ReferenceHandler=ReferenceHandler.IgnoreCycles);
+    options=> 
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.Converters.Add(new DateTimeJsonConverter());
+    }
+   
+    
+    );
 
 builder.Services.AddSingleton(new AppSettingsHelper());
 

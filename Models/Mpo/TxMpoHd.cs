@@ -57,7 +57,9 @@ namespace RMPortal.WebServer.Models.Mpo
         public string? ShippedTo { get; set; }
         //允许超收货
         public decimal AllowPurchase { get; set; }
+        public char OverQtyType { get; set; }
         public ICollection<TxMpoDet>? TxMpoDets { get; set; }=new List<TxMpoDet>();
+        public ICollection<TxMpoMatDet>? TxMpoMatDets { get; set; } =new List<TxMpoMatDet>();
         public ICollection<TxMpoSurcharge>? TxMpoSurcharges { get; set; } =new List<TxMpoSurcharge>();
     }
 }

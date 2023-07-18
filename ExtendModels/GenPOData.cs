@@ -49,6 +49,12 @@
 
     }
 
+    public class MrData
+    {
+        public string? MrNo { get; set; }
+        //public string? MatCode { get; set; }
+        public decimal? Qty { get; set; }
+    }
     public class PoData
     {
         public string? MatCode { get; set; }
@@ -62,6 +68,25 @@
         public string? PxUnit { get; set; }
         public decimal? Width1 { get; set; }
         public decimal? Weight { get; set; }
+        public string? WidthUnit { get; set; }
+        public decimal? BuyUnitFactor { get; set; }
+        public decimal? PxUnitFactor { get; set; }
+        public string? MatDesc { get; set; }
+        public ICollection<MrData>? MrDatas { get; set; }= new List<MrData>();
+    }
+
+    public class MatDetailData
+    {
+        public string? MatCode { get; set; }
+        public string? TempMat { get; set; }
+        public string? BuyUnit { get; set; }
+        public decimal? BuyUnitFactor { get; set; }
+        public string? PriceUnit { get; set; }
+        public decimal? PriceUnitFactor { get; set; }
+        public decimal? Width { get; set; }
+        public decimal? Weight { get; set;}
+        public string? MatDesc { get; set; }
+        public decimal? MpoAmount { get; set;}
     }
     public class MpoView
     {

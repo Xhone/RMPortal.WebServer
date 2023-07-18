@@ -20,17 +20,27 @@ namespace RMPortal.WebServer.Controllers
             {"SuppCode","SuppCode"},{"CustCode","CustCode"},{"CustStyle","CustStyle"},
             {"Season","Season"}
         };
+
+        private readonly Dictionary<string, string> MATHEAD_FILTERS = new Dictionary<string, string>()
+        {
+            {"MatCode","MatCode" },{"Type","Type"},{"SubType","SubType"},
+            
+        };
+        /// <summary>
+        /// 获取MpoType
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("GetMpoType")]
-        public async Task<ActionResult<IEnumerable<MaType>>> GetMpoType()
+        public async Task<ActionResult<IEnumerable<string>>> GetMpoType()
         {
             try
             {
                 using (var dbContext = new SGSContext())
 
                 {
-                    var id = 70151;
+                  
 
-                    var result = await dbContext.MaTypes.FromSql($"select Field1 as MpoType from MaGlobalDet where KeyNo={id}").ToListAsync();
+                    var result = await dbContext.Database.SqlQuery<string>($"select Field1 from MaGlobalDet where KeyNo=70151").ToListAsync();
 
                     return Ok(result);
                 }
@@ -42,6 +52,10 @@ namespace RMPortal.WebServer.Controllers
 
 
         }
+        /// <summary>
+        /// 获取MpoHeading
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("GetMpoHeading")]
         public async Task<ActionResult<IEnumerable<string>>> GetMpoHeading()
         {
@@ -58,7 +72,10 @@ namespace RMPortal.WebServer.Controllers
                 return BadRequest();
             }
         }
-
+        /// <summary>
+        /// 获取团队
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("GetTerms")]
         public async Task<ActionResult<IEnumerable<string>>> GetTerms()
         {
@@ -75,7 +92,10 @@ namespace RMPortal.WebServer.Controllers
                 return BadRequest();
             }
         }
-
+        /// <summary>
+        /// 获取付款方式
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("GetPayment")]
         public async Task<ActionResult<IEnumerable<string>>> GetPayment()
         {
@@ -92,7 +112,26 @@ namespace RMPortal.WebServer.Controllers
                 return BadRequest();
             }
         }
-
+        [HttpGet("GetCountry")]
+        public async Task<ActionResult<IEnumerable<string>>> GetCountry()
+        {
+            try
+            {
+                using (var dbContext = new SGSContext())
+                {
+                    var result = await dbContext.Database.SqlQuery<string>($"select Country from MaCountry order by Country").ToListAsync();
+                    return Ok(result);
+                }
+            }
+            catch
+            {
+                return BadRequest();
+            }
+        }
+        /// <summary>
+        /// 获取供应商
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("GetSupplier")]
         public async Task<ActionResult<IEnumerable<Supplier>>> GetSupplier()
         {
@@ -111,7 +150,10 @@ namespace RMPortal.WebServer.Controllers
             }
 
         }
-
+        /// <summary>
+        /// 获取货币
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("GetCcy")]
         public async Task<ActionResult<IEnumerable<Currency>>> GetCcy()
         {
@@ -130,7 +172,10 @@ namespace RMPortal.WebServer.Controllers
             }
 
         }
-
+        /// <summary>
+        /// 获取surcharge
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("GetSurType")]
         public async Task<ActionResult<IEnumerable<Surcharge>>> GetSurType()
         {
@@ -150,7 +195,10 @@ namespace RMPortal.WebServer.Controllers
                 return BadRequest(ex.Message);
             }
         }
-
+        /// <summary>
+        /// 获取运输目的地
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("GetShipped")]
         public async Task<ActionResult<IEnumerable<Shipped>>> GetShipped()
         {
@@ -264,6 +312,122 @@ namespace RMPortal.WebServer.Controllers
             if(result==null)
                 return NotFound();
             return Ok(result);
+        }
+        /// <summary>
+        /// 从GenMpo的明细汇总TxMpoMatDet的数据
+        /// </summary>
+        /// <param name="genPODatas"></param>
+        /// <returns></returns>
+        [HttpPost("GetMatDetail")]
+        public async Task<ActionResult<IEnumerable<MatDetailData>>> GetMatDetailData([FromBody] List<GenPOData> genPODatas)
+        {
+            var result = await Task.Run(() => { return GenMpoBiz.GetMatDetailData(genPODatas); });
+            if(result==null)
+                return NotFound();
+            return Ok(result);
+        }
+
+        [HttpGet("GetMaterialData")]
+        public async Task<ActionResult<IEnumerable<MaMatHead>>> GetMaterialData()
+        {
+            try
+            {
+                using (var context = new SGSContext())
+                {
+                    FormattableString sql = $"select top 500 MatCode,Type,SubType,Description,MeasUnit, Active from MaMatHead (nolock) where Active='Y' order by MatCode desc";
+                    var result = await context.MaMatHeads.FromSql(sql).ToListAsync();
+                    return Ok(result);
+                }
+
+            }
+            catch (SqlException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
+        }
+
+
+
+        [HttpGet("GetMaterialDataByFilter")]
+        public async Task<ActionResult<IEnumerable<MaMatHead>>> GetMaterialDataByFilter(string? name, string? value1, string? value2)
+        {
+            try
+            {
+                string? n = "";
+                //检测传入的name，防止依赖注入
+                n = MATHEAD_FILTERS.TryGetValue(name, out n) ? n : "MatCode";
+
+                var v1 = string.IsNullOrEmpty(value1) ? "" : value1.ToUpper();
+                var v2 = string.IsNullOrEmpty(value2) ? "" : value2.ToUpper();
+                using (var context = new SGSContext())
+                {
+
+
+                    FormattableString sql = $"select top 500 MatCode,Type,SubType,Description,MeasUnit, Active from MaMatHead (nolock) where Active='Y' order by MatCode desc";
+
+                    if (!string.IsNullOrEmpty(v1) && !string.IsNullOrEmpty(v2))
+                    {
+                        SqlParameter[] parameters = new SqlParameter[]{
+                            new SqlParameter
+                            {
+                                ParameterName="p0",
+                                Value=v1
+                            },
+                            new SqlParameter
+                            {
+                                ParameterName="p1",
+                                Value=v2
+                            }
+                        };
+
+                        var sql1 = $"select top 500 MatCode,Type,SubType,Description,MeasUnit, Active from MaMatHead (nolock) where Active='Y' and {n} >= @p0 and {n} <= @p1 order by MatCode desc";
+                        var res = await context.MaMatHeads.FromSqlRaw(sql1, parameters).ToListAsync();
+                        return Ok(res);
+                    }
+                    else if (!string.IsNullOrEmpty(v1))
+                    {
+                        v1 += "%";
+
+                        var p1 = new SqlParameter { ParameterName = "p0", Value = v1 };
+                        var sql1 = $"select top 500 MatCode,Type,SubType,Description,MeasUnit, Active from MaMatHead (nolock) where Active='Y' and  {n} like @p0 order by MatCode desc";
+                        var res = await context.MaMatHeads.FromSqlRaw(sql1, p1).ToListAsync();
+                        return Ok(res);
+                    }
+                    else
+                    {
+
+                      
+                    }
+
+
+                    var result = await context.MaMatHeads.FromSql(sql).ToListAsync();
+                    return Ok(result);
+                }
+
+            }
+            catch (SqlException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
+        }
+        /// <summary>
+        /// 获取物料的明细数据
+        /// </summary>
+        /// <param name="matCode"></param>
+        /// <returns></returns>
+        [HttpGet("GetMaMatDetail")]
+        public async Task<ActionResult<MaMatDetail>> GeMaMatDetail(string matCode)
+        {
+            var result = await Task.Run(() =>
+            {
+                return DTradeBiz.GetMaMatDetail(matCode);
+            });
+
+            if(result == null)
+                return NotFound();
+            return Ok(result[0]);
         }
     }
 }

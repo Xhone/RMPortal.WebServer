@@ -20,6 +20,9 @@ namespace RMPortal.WebServer.Data
 
         public virtual DbSet<Currency> Currencys { get; set; }
         public virtual DbSet<Shipped> Shippeds { get; set; }
+        public virtual DbSet<MaMatHead> MaMatHeads { get; set; } 
+        
+        public virtual DbSet<MaMatDetail> MaMatDetails { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
 
@@ -69,6 +72,11 @@ namespace RMPortal.WebServer.Data
             modelBuilder.Entity<Shipped>(
                 eb => { eb.HasNoKey(); });
 
+            modelBuilder.Entity<MaMatHead>(
+              eb => { eb.HasNoKey(); });
+
+            modelBuilder.Entity<MaMatDetail>(
+              eb => { eb.HasNoKey(); });
             //base.OnModelCreating(modelBuilder);
         }
 

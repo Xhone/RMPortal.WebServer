@@ -95,6 +95,9 @@ CREATE TABLE [dbo].TxMpoHd(
 	)with (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
+ALTER TABLE TxMpoHd ADD ApproveFlag bit default 0
+ALTER TABLE TxMpoHd ADD ApproveUser nvarchar(20)
+ALTER TABLE TxMpoHd Add ApproveDate datetime
 insert into TxMpoHd(MpoNo)values('ffff')
 insert into TxMpoHd(MpoNo)VALUES('SSSS')
 insert into TxMpoDet values(1,'SSSS',1,'','','','','',1,1,1,1,'',1,'',1,1)
@@ -104,7 +107,7 @@ drop table TxMpoDet
 
 --TxMpoDet
 CREATE TABLE dbo.TxMpoDet(
-MpoDetId int ,
+MpoDetId int identity(1,1),
 MpoNo nvarchar(20),
 Seq int,
 MatCode nvarchar(40),
@@ -133,6 +136,16 @@ ALTER TABLE dbo.TxMpoDet ADD TxMpoHdId int default 0
 ALTER TABLE dbo.TxMpoDet ADD CONSTRAINT FK_MpoNo
 FOREIGN KEY (MpoNo) REFERENCES TxMpoHd(MpoNo)
 
+ALTER TABLE TxMpoDet ADD WidthUnit nvarchar(8)
+ALTER TABLE TxMpoDet ADD BuyUnitFactor decimal(10,4)
+ALTER TABLE TxMpoDet ADD PxUnitFactor decimal(10,4)
+ALTER TABLE TxMpoDet ADD MatDesc nvarchar(255)
+ALTER TABLE TxMpoDet ADD VendorNo nvarchar(30)
+ALTER TABLE TxMpoDet ADD VendorColor nvarchar(20)
+ALTER TABLE TxMpoDet ADD Origin nvarchar(20)
+ALTER TABLE TxMpoDet ADD Remark nvarchar(1000)
+
+
 --TxMpoMatDet
 CREATE TABLE TxMpoMatDet(
 MpoMatDetId int identity(1,1),
@@ -155,8 +168,16 @@ constraint PK_MpoMatDet primary key clustered(
 	)with (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
-ALTER TABLE TxMpoMatDet ADD CONSTRAINT FK_MpoNo
-FOREIGN KEY (MpoNo) REFERENCES TxMpoDet(MpoNo)
+ALTER TABLE [dbo].[TxMpoMatDet]  WITH CHECK ADD  CONSTRAINT [FkTxMpoMatDet_Hd] FOREIGN KEY([MpoNo])
+REFERENCES [dbo].[TxMpoHd] ([MpoNo])
+GO
+
+ALTER TABLE [dbo].[TxMpoMatDet] CHECK CONSTRAINT [FkTxMpoMatDet_Hd]
+GO
+
+ALTER TABLE TxMpoMatDet ADD MpoAmount decimal(15,2)
+ALTER TABLE TxMpoMatDet DROP COLUMN ArticleNo
+ALTER TABLE TxMpoMatDet DROP COLUMN Vendor
 
 --TxMpoSurcharge
 CREATE TABLE TxMpoSurcharge(
@@ -178,23 +199,26 @@ FOREIGN KEY (MpoNo) REFERENCES TxMpoHd(MpoNo)
 
 GO
 
+drop table TxMpoDet
+
 CREATE TABLE [dbo].[TxMpoDet](
-	[MpoNo] nvarchar(20) NOT NULL,
-	[MpoDetId] int NOT NULL,
-	[Seq] int NULL,
-	[MatCode] [nvarchar](40) NULL,
-	[TempMat] [nvarchar](150) NULL,
-	[ColorCode] [nvarchar](20) NULL,
-	[Color] [nvarchar](150) NULL,
-	[Size] [nvarchar](20) NULL,
-	[Qty] [decimal](14, 3) NULL,
-	[MrQty] [decimal](14, 3) NULL,
-	[StockQty] [decimal](14, 3) NULL,
-	[FirstMrQty] [decimal](14, 3) NULL,
-	[UPx] [decimal](12, 4) NULL,
-	[PxUnit] [nvarchar(10)],
-	[Width] decimal(7,4),
-	[Weight] decimal(7,4)
+MpoDetId int identity(1,1) not null,
+MpoNo nvarchar(20) not null,
+Seq int,
+MatCode nvarchar(40),
+TempMat nvarchar(150),
+ColorCode nvarchar(20),
+Color nvarchar(150),
+Size nvarchar(20),
+Qty decimal(14,3),
+MrQty decimal(14,3),
+StockQty decimal(14,3),
+FirstMrQty decimal(14,3),
+BuyUnit nvarchar(8),
+Upx decimal(12,4),
+PxUnit nvarchar(10),
+Width decimal(7,4),
+Weight decimal(7,4)
 	
  CONSTRAINT [PkTxMpoDet] PRIMARY KEY NONCLUSTERED 
 (
@@ -221,4 +245,34 @@ REFERENCES [dbo].[TxMpoHd] ([MpoNo])
 GO
 
 ALTER TABLE [dbo].[TxMpoDet] CHECK CONSTRAINT [FkTxMpoDet_Hd]
+GO
+
+--TxMpoDetMr
+drop table TxMpoDetMr
+CREATE TABLE [dbo].[TxMpoDetMr](
+	[MpoNo] [nvarchar](20) NOT NULL,
+	[MpoDetId] [int] NOT NULL,
+	[MpoDetJobId] [int] IDENTITY(1,1) NOT NULL,
+	[MrNo] [nvarchar](30) NULL,
+	[Qty] [decimal](14, 3) NULL,
+ CONSTRAINT [PkTxMpoDetMr] PRIMARY KEY NONCLUSTERED 
+(
+	[MpoNo] ASC,
+	[MpoDetId] ASC,
+	[MpoDetJobId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, FILLFACTOR = 80) ON [PRIMARY],
+ CONSTRAINT [UXTxMpoDetMr] UNIQUE NONCLUSTERED 
+(
+	[MpoNo] ASC,
+	[MpoDetId] ASC,
+	[MrNo] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, FILLFACTOR = 80) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[TxMpoDetMr]  WITH CHECK ADD  CONSTRAINT [FkTxMpoDetMr_Det] FOREIGN KEY([MpoNo], [MpoDetId])
+REFERENCES [dbo].[TxMpoDet] ([MpoNo], [MpoDetId])
+GO
+
+ALTER TABLE [dbo].[TxMpoDetMr] CHECK CONSTRAINT [FkTxMpoDetMr_Det]
 GO

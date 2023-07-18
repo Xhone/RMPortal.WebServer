@@ -1,9 +1,11 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using RMPortal.WebServer.Controllers;
 using RMPortal.WebServer.Data;
 using RMPortal.WebServer.ExtendModels;
 using RMPortal.WebServer.Helpers;
+using RMPortal.WebServer.Models.Mpo;
 using System.Data;
 using System.Reflection;
 
@@ -17,6 +19,11 @@ namespace RMPortal.WebServer.Businesses
             try
             {
                 int userId = UserController.ID;
+#if DEBUG
+                if (userId == 0) {
+                    userId = 1793;
+                }
+#endif
                 using(var dbContext=new SGSContext())
                 {
                     
@@ -292,7 +299,11 @@ namespace RMPortal.WebServer.Businesses
                          s.UPx,
                          s.PxUnit,
                          s.Width1,
-                         s.Weight
+                         s.Weight,
+                         s.WidthUnit,
+                         s.BuyUnitFactor,
+                         s.PxUnitFactor,
+                         s.MatDesc
                      } into g
                      select new PoData
                      {
@@ -307,12 +318,87 @@ namespace RMPortal.WebServer.Businesses
                          UPx = g.Key.UPx,
                          PxUnit =   g.Key.PxUnit,
                          Width1 = g.Key.Width1,
-                         Weight = g.Key.Weight
+                         Weight = g.Key.Weight,
+                         WidthUnit = g.Key.WidthUnit,
+                         BuyUnitFactor=g.Key.BuyUnitFactor,
+                         PxUnitFactor=g.Key.PxUnitFactor,
+                         MatDesc=g.Key.MatDesc,
+                       
+                     }).ToList();
+            if (v == null)
+                return null;
+
+            //var r = (from s in genPODatas
+            //         join g in v on s.MatCode equals g.MatCode into s_g
+            //         from g in s_g.DefaultIfEmpty()
+                    
+            //         select new MrData
+            //         {
+            //             MrNo = s.JobNo,
+            //             //MatCode=s.MatCode,
+
+            //             Qty = s.MrReqQty_B,
+
+            //         }).ToList();
+            List<PoData> p = new List<PoData>();
+            foreach(var vData in v)
+            {
+                foreach(var poData in genPODatas)
+                {
+                    if(poData.MatCode == vData.MatCode&&poData.TempMat==vData.TempMat
+                        &&poData.ColorCode==vData.ColorCode&&poData.Color==vData.Color
+                        &&poData.Sizes==vData.Sizes)
+                    {
+                        MrData mrData=new MrData 
+                        {
+                            MrNo = poData.JobNo,
+                            //MatCode=vData.MatCode,
+                            Qty = poData.MrReqQty_B,
+                        };
+                        vData.MrDatas.Add(mrData);
+                    }
+                  
+                }
+                p.Add(vData);
+            }
+            return p;
+        }
+
+        public static List<MatDetailData>? GetMatDetailData(List<GenPOData> genPODatas)
+        {
+            var v = (from s in genPODatas
+                     group s by new
+                     {
+                         s.MatCode,
+                         s.TempMat,
+                         
+                         s.BuyUnit,
+                         s.BuyUnitFactor,
+                         s.PxUnit,
+                         s.PxUnitFactor,
+                         s.Width1,
+                         s.Weight,
+                         s.MatDesc
+                     } into g
+                     select new MatDetailData
+                     {
+                         MatCode = g.Key.MatCode,
+                         TempMat = g.Key.TempMat,
+                     
+                         MpoAmount=g.Sum(s=>(s.UPx/(s.PxUnitFactor??1)*s.MrReqQty_B)),
+
+                         BuyUnit = g.Key.BuyUnit,
+                         BuyUnitFactor = g.Key.BuyUnitFactor,
+                         PriceUnit = g.Key.PxUnit,
+                         PriceUnitFactor=g.Key.PxUnitFactor,
+                         Width = g.Key.Width1,
+                         Weight = g.Key.Weight,
+                         MatDesc = g.Key.MatDesc
                      }).ToList();
             if (v == null)
                 return null;
             return v;
-        }         
+        }
         public static List<MpoView> GetMpoView(string jobNo)
         {
 
@@ -431,6 +517,26 @@ namespace RMPortal.WebServer.Businesses
             return list;
         }
 
+        public static string GetStatus(char? status)
+        {
+            string result = "Open";
+            switch (status)
+            {
+                case 'O':
+                    result = "Open";
+                    break;
+                case 'C':
+                    result = "Complete";
+                    break;
+                case 'X':
+                    result = "Cancel";
+                    break;
+                default:
+                    result="Open";
+                    break;
+            }
+            return result;
+        }
         private static T GetItem<T>(DataRow dr)
         {
             Type type = typeof(T);
